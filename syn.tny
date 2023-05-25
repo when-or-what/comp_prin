@@ -1,0 +1,28 @@
+{
+    This is a test file of parser.
+}
+
+{ Declaration of a single variable }
+int a;
+{ Declaration of multiple variables }
+int x, y, z;
+{ Declaration of a one-dimensional array }
+int arr[10];
+
+{ Definition of function }
+int func(int a, int b){
+    return a * b - (a + b);
+}
+
+read a;
+read x;
+read y;
+read z;
+
+i := 0;
+repeat
+    read arr[i];
+    i := i + 1
+until i = 10;
+
+write arr[0] + y * (x - z) / a + func(x, arr[1]);

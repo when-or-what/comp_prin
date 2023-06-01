@@ -23,8 +23,8 @@
 #endif
 
 /* MAXRESERVED = the number of reserved words */
-/* 添加一个类型保留字int */
-#define MAXRESERVED 9
+/* 添加一个类型保留字int，函数关键字 function return while语句关键字 do while*/
+#define MAXRESERVED 13
 
 typedef enum
 /* book-keeping tokens */
@@ -39,7 +39,11 @@ typedef enum
   UNTIL,
   READ,
   WRITE,
-  INT,
+  INT,      /* 保留字int */
+  FUNCTION, /* 保留字 function */
+  WHILE,    /* 保留字while */
+  DO,       /* 保留字do */
+  RETURN,   /* 保留字return */
   /* multicharacter tokens */
   ID,
   NUM,
@@ -54,6 +58,9 @@ typedef enum
   LPAREN,
   RPAREN,
   SEMI,
+  COMMA, /* 逗号 */
+  LSQU,  /* 左中括号 */
+  RSQU,  /* 右中括号 */
   FLOAT } TokenType;
 
 extern FILE* source;  /* source code text file */
@@ -67,7 +74,20 @@ extern int lineno; /* source line number for listing */
 /**************************************************/
 
 typedef enum { StmtK, ExpK } NodeKind;
-typedef enum { IfK, RepeatK, AssignK, ReadK, WriteK } StmtKind;
+/* 增加变量声明的定义语句 */
+typedef enum {
+    IfK,
+    RepeatK,
+    AssignK,
+    ReadK,
+    WriteK,
+    DeclareK, /* 变量声明语句类型 */
+    WhileK,   /* while语句类型 */
+    FuncK,    /* 函数 */
+    ReturnK,  /* return语句 */
+} StmtKind;
+// typedef enum { IfK, RepeatK, AssignK, ReadK, WriteK } StmtKind;
+
 typedef enum { OpK, ConstK, IdK } ExpKind;
 
 /* ExpType is used for type checking */

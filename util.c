@@ -22,6 +22,11 @@ void printToken(TokenType token, const char *tokenString) {
         case UNTIL:
         case READ:
         case WRITE:
+        case INT:
+        case FUNCTION:
+        case WHILE:
+        case DO:
+        case RETURN:
             fprintf(listing, "reserved word: %s\n", tokenString);
             break;
         case ASSIGN:
@@ -53,6 +58,16 @@ void printToken(TokenType token, const char *tokenString) {
             break;
         case OVER:
             fprintf(listing, "/\n");
+            break;
+            /* 添加逗号以及中括号 */
+        case COMMA:
+            fprintf(listing, ",\n");
+            break;
+        case LSQU:
+            fprintf(listing, "[\n");
+            break;
+        case RSQU:
+            fprintf(listing, "]\n");
             break;
         case ENDFILE:
             fprintf(listing, "EOF\n");
@@ -166,6 +181,12 @@ void printTree(TreeNode *tree) {
                     break;
                 case WriteK:
                     fprintf(listing, "Write\n");
+                    break;
+                case WhileK:
+                    fprintf(listing, "While\n");
+                    break;
+                case ReturnK:
+                    fprintf(listing, "Return\n");
                     break;
                 default:
                     fprintf(listing, "Unknown ExpNode kind\n");

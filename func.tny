@@ -1,0 +1,15 @@
+i:=10;
+while 0 < i do
+    write i;
+    i:=i-1
+end;
+
+if 0 < x then
+    read x;
+    write y - 1
+end;
+
+function int fun(int a)then
+    
+end;
+return a+a/a-a

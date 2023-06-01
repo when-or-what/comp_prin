@@ -73,10 +73,13 @@ static void ungetNextChar(void) {
 static struct {
     char* str;
     TokenType tok;
-} reservedWords[MAXRESERVED] = {
-    {"if", IF},     {"then", THEN},     {"else", ELSE},
-    {"end", END},   {"repeat", REPEAT}, {"until", UNTIL},
-    {"read", READ}, {"write", WRITE},   {"int", INT}};
+} reservedWords[MAXRESERVED] = {{"if", IF},         {"then", THEN},
+                                {"else", ELSE},     {"end", END},
+                                {"repeat", REPEAT}, {"until", UNTIL},
+                                {"read", READ},     {"write", WRITE},
+                                {"int", INT},       {"function", FUNCTION},
+                                {"while", WHILE},   {"do", DO},
+                                {"return", RETURN}};
 
 /* lookup an identifier to see if it is a reserved word */
 /* uses linear search */
@@ -156,6 +159,18 @@ TokenType getToken(void) {
                             break;
                         case ';':
                             currentToken = SEMI;
+                            break;
+                        /*把逗号作为符号添加进词法分析*/
+                        case ',':
+                            currentToken = COMMA;
+                            break;
+                            /*把左中括号作为符号添加进词法分析*/
+                        case '[':
+                            currentToken = LSQU;
+                            break;
+                            /*把右中括号作为符号添加进词法分析*/
+                        case ']':
+                            currentToken = RSQU;
                             break;
                         default:
                             currentToken = ERROR;

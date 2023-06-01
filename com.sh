@@ -1,4 +1,5 @@
 #!/bin/bash
-gcc -std=c99 ./*.h ./*.c -o ./tt
-# ./tt ./test.tny
-./tt ./syn.tny
+gcc -g -std=c99 ./*.h ./*.c -o ./tt
+./tt ./func.tny
+# gdb --args ./tt ./func.tny
+# ./tt ./syn.tny

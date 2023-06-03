@@ -1,33 +1,20 @@
 function int main();
+function int tt(int a, int b, int c);
+
+int w, e, r;
+int x := 0, c := x, arr[5], aw[3] := [1, 2, 3];
+int qs[3][4], a[2][3] := [2, 3, 4, 5, 2, 1];
+int a[3] := [100, 2, 11], b[2][4] := [200, 300];
 
 function int test() then
-    int w, e, r;
-    int x := 0, c := x, arr[5], aw[3] := [1, 2, 3];
-    int qs[3][4], a[2][3] := [2, 3, 4, 5, 2, 1];
     read i;
     while 0 < i do
         x := x + arr[i];
         i := i - a[i][2]
     end;
-    return x + y / aw[c]
+    return 1 + y / aw[c]
 end;
-
-int a[3] := [100, 2, 11], b[2][4] := [200, 300];
 
 function int func(int n, int m) then
     return func(a[m], b[n][m]) * a[0] / func(func(a[n], 4), func(m, b[0][n]))
-end;
-
-{ Sample program in TINY language
-  -computes factorial
-}
-
-read x; { input an integer }
-if 0 < x then { don't compute if x <= 0 }
-  fact := 1;
-  repeat
-    fact := fact * x;
-    x := x - 1
-  until x = 0;
-  write fact  { output factorial of x }
 end

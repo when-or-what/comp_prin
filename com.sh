@@ -1,5 +1,5 @@
 #!/bin/bash
 gcc -g -std=c99 ./*.h ./*.c -o ./tt
-./tt ./func.tny
+# ./tt ./func.tny
 # gdb --args ./tt ./func.tny
-# ./tt ./syn.tny
+./tt ./sample.tny

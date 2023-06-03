@@ -121,6 +121,12 @@ TreeNode *newExpNode(ExpKind kind) {
         t->nodekind = ExpK;
         t->kind.exp = kind;
         t->lineno = lineno;
+        t->attr.dem = (int *)malloc(MAX_DEM * sizeof(int));
+        t->attr.pos = 0;
+        t->attr.init_val = (int *)malloc(MAX_NUM * sizeof(int));
+        t->attr.ipos = 0;
+        t->attr.invo = (char **)malloc(MAX_DEM * sizeof(char *));
+        t->attr.ppos = 0;
         t->type = Void;
     }
     return t;
@@ -160,6 +166,7 @@ static void printSpaces(void) {
 /* procedure printTree prints a syntax tree to the
  * listing file using indentation to indicate subtrees
  */
+char *str, *ss;
 void printTree(TreeNode *tree) {
     int i;
     INDENT;
@@ -188,6 +195,24 @@ void printTree(TreeNode *tree) {
                 case ReturnK:
                     fprintf(listing, "Return\n");
                     break;
+                case FuncK:
+                    fprintf(listing, "Function: %s\n", tree->attr.name);
+                    break;
+                case TypeK:
+                    fprintf(listing, "Type: %s\n", tree->attr.type);
+                    break;
+                case BodyK:
+                    fprintf(listing, "Function-Body: \n");
+                    break;
+                case ListK:
+                    fprintf(listing, "Parameter-List: \n");
+                    break;
+                case DeclareK:
+                    fprintf(listing, "Declare: \n");
+                    break;
+                case IdListK:
+                    fprintf(listing, "Variable-List: \n");
+                    break;
                 default:
                     fprintf(listing, "Unknown ExpNode kind\n");
                     break;
@@ -203,6 +228,69 @@ void printTree(TreeNode *tree) {
                     break;
                 case IdK:
                     fprintf(listing, "Id: %s\n", tree->attr.name);
+                    break;
+                case ParamK:
+                    fprintf(listing, "Param (%s): %s\n", tree->attr.name,
+                            tree->attr.type);
+                    break;
+                case ArrCK:
+                    str = (char *)malloc(BUF_SIZE);
+                    memset(str, 0, sizeof(str));
+                    for (int i = 0; i < tree->attr.ppos; i++) {
+                        sprintf(str + strlen(str), "[%s]", tree->attr.invo[i]);
+                    }
+                    fprintf(listing, "Array-Call: %s%s\n", tree->attr.name,
+                            str);
+                    break;
+                case FunCK:
+                    fprintf(listing, "Function-Call: \n");
+                    break;
+                case VarK:
+                    fprintf(listing, "Var (%s): uninitialized\n",
+                            tree->attr.name);
+                    break;
+                case VarInK:
+                    if (tree->attr.type) {
+                        fprintf(listing, "Var (%s): %s\n", tree->attr.name,
+                                tree->attr.type);
+                    } else {
+                        fprintf(listing, "Var (%s): %d\n", tree->attr.name,
+                                tree->attr.val);
+                    }
+                    break;
+                case ArrK:
+                    str = (char *)malloc(BUF_SIZE);
+                    memset(str, 0, sizeof(str));
+                    for (int i = 0; i < tree->attr.pos; i++) {
+                        sprintf(str + strlen(str), "[%d]", tree->attr.dem[i]);
+                    }
+                    fprintf(listing, "Array (%s%s): uninitialized\n",
+                            tree->attr.name, str);
+                    free(str);
+                    break;
+                case ArrInK:
+                    str = (char *)malloc(BUF_SIZE);
+                    memset(str, 0, sizeof(str));
+                    for (int i = 0; i < tree->attr.pos; i++) {
+                        sprintf(str + strlen(str), "[%d]", tree->attr.dem[i]);
+                    }
+
+                    ss = (char *)malloc(BUF_SIZE);
+                    memset(ss, 0, sizeof(ss));
+                    sprintf(ss + strlen(ss), "initialized with: {");
+                    for (int i = 0; i < tree->attr.ipos - 1; i++) {
+                        sprintf(ss + strlen(ss), "%d, ",
+                                tree->attr.init_val[i]);
+                    }
+                    if (tree->attr.ipos - 1 >= 0) {
+                        sprintf(ss + strlen(ss), "%d}",
+                                tree->attr.init_val[tree->attr.ipos - 1]);
+                    }
+
+                    fprintf(listing, "Array (%s%s): %s\n", tree->attr.name, str,
+                            ss);
+                    free(str);
+                    free(ss);
                     break;
                 default:
                     fprintf(listing, "Unknown ExpNode kind\n");

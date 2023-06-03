@@ -28,12 +28,11 @@ static TreeNode* factor(void);
 /* 添加变量声明语句，含一维数组 */
 static TreeNode* declare_stmt(void);  // 变量声明
 static TreeNode* type(void);          // 变量类型，只有int
-static TreeNode* kind(void);
+static void kind(TreeNode* t);
 static TreeNode* id_lists(void);  // 变量列表
-static TreeNode* id_list(void);
+static TreeNode* id_list(TreeNode* p);
 static TreeNode* dec_tmp1(void);
-static TreeNode* dec_tmp2(void);
-static TreeNode* arr_de(void);
+static void arr_de(TreeNode* t);
 /* 添加函数声明语句 */
 static TreeNode* function_stmt(void);  // 函数声明
 static TreeNode* para_lists(void);     // 参数列表
@@ -42,17 +41,17 @@ static TreeNode* body(void);  // 函数体
 
 static TreeNode* return_stmt(void);  // return语句
 /* 添加函数调用 */
-static TreeNode* X(void);
-static TreeNode* Q(void);
-static TreeNode* QQ(void);
+static TreeNode* X(TreeNode* p);
+static void Q(TreeNode* t);
+static void QQ(TreeNode* t);
 /* 关于数组与函数的引用 */
 static TreeNode* infactor(void);
-static TreeNode* params(void);
+static void params(TreeNode* t);
 static TreeNode* inparams(void);
 static TreeNode* inparam(void);
+static void inpara(TreeNode* t);
 /* while 和 dowhile语句 */
 static TreeNode* while_stmt(void);
-static TreeNode* dowhile_stmt(void);
 
 static void syntaxError(char* message) {
     fprintf(listing, "\n>>> ");
@@ -203,150 +202,191 @@ TreeNode* while_stmt(void) {
 
 /* 变量声明语句 */
 TreeNode* declare_stmt(void) {
-    type();
-    id_lists();
-    return NULL;
+    TreeNode* t = newStmtNode(DeclareK);
+    if (t) {
+        t->child[0] = type();
+        t->child[1] = id_lists();
+    }
+    return t;
 }
 
 TreeNode* id_lists(void) {
+    TreeNode* t = newStmtNode(IdListK);
     if (token == ID) {
+        TreeNode* p = newExpNode(VarK);
+        if (p && token == ID) {
+            p->attr.name = copyString(tokenString);
+        }
         match(ID);
-        id_list();
+        p->sibling = id_list(p);
+        if (t) t->child[0] = p;
     }
-    return NULL;
+    return t;
 }
 
-TreeNode* id_list(void) {
+TreeNode* id_list(TreeNode* p) {
+    TreeNode* t = NULL;
     if (token == ASSIGN) {
+        p->kind.exp = VarInK;
         match(token);
-        kind();
-        dec_tmp1();
+        kind(p);
+        t = dec_tmp1();
     } else {
-        arr_de();
-        X();
+        arr_de(p);
+        t = X(p);
     }
-    return NULL;
+    return t;
 }
 
-TreeNode* X(void) {
+TreeNode* X(TreeNode* p) {
+    TreeNode* t = NULL;
     if (token == COMMA) {
-        dec_tmp1();
+        t = dec_tmp1();
     } else if (token == ASSIGN) {
         match(token);
         match(LSQU);
-        Q();
+        Q(p);
         match(RSQU);
-        dec_tmp1();
+        t = dec_tmp1();
     }
-    return NULL;
+    return t;
 }
 
 TreeNode* dec_tmp1(void) {
+    TreeNode* t = NULL;
     if (token == COMMA) {
+        t = newExpNode(VarK);
         match(COMMA);
+        if (t && token == ID) {
+            t->attr.name = copyString(tokenString);
+        }
         match(ID);
-        dec_tmp2();
+        t->sibling = id_list(t);
     }
-    return NULL;
+    return t;
 }
 
-TreeNode* dec_tmp2(void) {
-    if (token == ASSIGN) {
-        match(token);
-        kind();
-        dec_tmp1();
-    } else {
-        arr_de();
-        X();
-    }
-    return NULL;
-}
-
-TreeNode* arr_de(void) {
+void arr_de(TreeNode* t) {
     if (token == LSQU) {
+        t->kind.exp = ArrK;
         match(token);
+        if (t && token == NUM) {
+            t->attr.dem[t->attr.pos++] = atoi(tokenString);
+        }
         match(NUM);
         match(RSQU);
-        arr_de();
+        arr_de(t);
     }
-    return NULL;
 }
 
-TreeNode* Q(void) {
+void Q(TreeNode* t) {
     if (token == NUM) {
+        t->kind.exp = ArrInK;
+        if (t) t->attr.init_val[t->attr.ipos++] = atoi(tokenString);
         match(token);
-        QQ();
+        QQ(t);
     }
-    return NULL;
 }
 
-TreeNode* QQ(void) {
+void QQ(TreeNode* t) {
     if (token == COMMA) {
         match(token);
+        if (t && token == NUM) {
+            t->attr.init_val[t->attr.ipos++] = atoi(tokenString);
+        }
         match(NUM);
-        QQ();
+        QQ(t);
     }
-    return NULL;
 }
 
 /* 函数 */
 TreeNode* function_stmt(void) {
+    TreeNode* t = newStmtNode(FuncK);
     match(FUNCTION);
-    type();
+    if (t) t->child[0] = type();
+    if (t && token == ID) {
+        t->attr.name = copyString(tokenString);
+    }
     match(ID);
     match(LPAREN);
-    para_lists();
+    if (t) t->child[1] = para_lists();
     match(RPAREN);
-    body();
-    return NULL;
+    if (t) t->child[2] = body();
+    return t;
 }
 
+/* 函数体 */
 TreeNode* body(void) {
+    TreeNode* t = newStmtNode(BodyK);
     if (token == THEN) {
         match(THEN);
         if (token != END) {
-            stmt_sequence();
+            if (t) t->child[0] = stmt_sequence();
         }
         match(END);
     }
-    return NULL;
+    return t;
 }
 
 /* 参数列表 */
 TreeNode* para_lists(void) {
+    TreeNode* t = newStmtNode(ListK);
+    TreeNode* p = NULL;
     if (token == INT) {
+        p = newExpNode(ParamK);
+        if (p && token == INT) {
+            p->attr.type = copyString(tokenString);
+        }
         match(INT);
+        if (p && token == ID) {
+            p->attr.name = copyString(tokenString);
+        }
         match(ID);
-        para_list();
+        p->sibling = para_list();
     } else if (token == COMMA) {
-        para_list();
+        p->sibling = para_list();
     }
-    return NULL;
+    if (t) t->child[0] = p;
+    return t;
 }
 
 TreeNode* para_list(void) {
+    TreeNode* p = NULL;
     if (token == COMMA) {
         match(token);
-        type();
+        p = newExpNode(ParamK);
+        if (p && token == INT) {
+            p->attr.type = copyString(tokenString);
+        }
+        match(INT);
+        if (p && token == ID) {
+            p->attr.name = copyString(tokenString);
+        }
         match(ID);
-        para_list();
+        p->sibling = para_list();
     }
-    return NULL;
+    return p;
 }
 
 /* 变量类型 */
 TreeNode* type(void) {
+    TreeNode* t = newStmtNode(TypeK);
     if (token == INT) {
+        if (t) t->attr.type = copyString(tokenString);
         match(token);
     }
-    return NULL;
+    return t;
 }
 
-TreeNode* kind(void) {
+void kind(TreeNode* t) {
     if (token == NUM || token == ID) {
+        if (t && token == NUM) {
+            t->attr.val = atoi(tokenString);
+        } else if (t && token == ID) {
+            t->attr.type = copyString(tokenString);
+        }
         match(token);
     }
-    return NULL;
 }
 
 TreeNode* expp(void) {
@@ -398,32 +438,8 @@ TreeNode* factor(void) {
     TreeNode* t = NULL;
     switch (token) {
         case NUM:
-            t = newExpNode(ConstK);
-            if ((t != NULL) && (token == NUM)) t->attr.val = atoi(tokenString);
-            // match(NUM);
-            infactor();
-            break;
         case ID:
-            t = newExpNode(IdK);
-            if ((t != NULL) && (token == ID))
-                t->attr.name = copyString(tokenString);
-            // match(ID);
-            // if (token == LPAREN) {
-            //     // 函数调用
-            //     match(LPAREN);
-            //     fun_call();
-            //     match(RPAREN);
-            // } else if (token == LSQU) {
-            //     // 数组元素引用
-            //     match(LSQU);
-            //     if (token == NUM) {
-            //         match(NUM);
-            //     } else if (token == ID) {
-            //         match(ID);
-            //     }
-            //     match(RSQU);
-            // }
-            infactor();
+            t = infactor();
             break;
         case LPAREN:
             match(LPAREN);
@@ -440,44 +456,75 @@ TreeNode* factor(void) {
 }
 
 TreeNode* infactor(void) {
+    TreeNode* t = NULL;
     if (token == ID) {
+        t = newExpNode(IdK);
+        if (t) t->attr.name = copyString(tokenString);
         match(token);
-        params();
+        params(t);
     } else if (token == NUM) {
+        t = newExpNode(ConstK);
+        if ((t != NULL) && (token == NUM)) t->attr.val = atoi(tokenString);
         match(token);
     }
-    return NULL;
+    return t;
 }
 
-TreeNode* params(void) {
+void params(TreeNode* t) {
     if (token == LSQU) {
+        t->kind.exp = ArrCK;
         match(token);
-        kind();
+        if (token == ID || token == NUM) {
+            if (t) t->attr.invo[t->attr.ppos++] = copyString(tokenString);
+            match(token);
+        }
         match(RSQU);
-        params();
+        inpara(t);
     } else if (token == LPAREN) {
         match(token);
-        inparams();
+        t->kind.exp = FunCK;
+        t->child[0] = newExpNode(IdK);
+        t->child[0]->attr.name = t->attr.name;
+        t->child[1] = inparams();
         match(RPAREN);
     }
-    return NULL;
 }
 
 TreeNode* inparams(void) {
+    TreeNode *t = NULL, *p = NULL;
     if (token == ID || token == NUM) {
-        infactor();
-        inparam();
+        t = newStmtNode(ListK);
+        p = infactor();
+        if (token == COMMA) {
+            p->sibling = inparam();
+        }
     }
-    return NULL;
+    if (t) t->child[0] = p;
+    return t;
 }
 
 TreeNode* inparam(void) {
+    TreeNode* t = NULL;
     if (token == COMMA) {
         match(token);
-        infactor();
-        inparam();
+        t = infactor();
+        if (token == COMMA) {
+            t->sibling = inparam();
+        }
     }
-    return NULL;
+    return t;
+}
+
+void inpara(TreeNode* t) {
+    if (token == LSQU) {
+        match(token);
+        if (token == ID || token == NUM) {
+            if (t) t->attr.invo[t->attr.ppos++] = copyString(tokenString);
+            match(token);
+        }
+        match(RSQU);
+        inpara(t);
+    }
 }
 
 /****************************************/

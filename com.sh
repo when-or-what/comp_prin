@@ -1,6 +1,4 @@
 #!/bin/bash
 gcc -g -std=c99 ./*.h ./*.c -o ./tt
-# ./tt ./func.tny
-# gdb --args ./tt ./func.tny
-# ./tt ./sample.tny
-./tt ./syn.tny
+./tt ./sample.tny # 正例
+# ./tt ./syn.tny # 反例
